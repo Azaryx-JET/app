@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=GRAAL-ATTACK
+Comment=Lancer le Sanctuaire GRAAL-ATTACK
+Exec=/usr/local/bin/graal-atack
+Icon=applications-utilities
+Terminal=false
+X-GNOME-Autostart-enabled=true
+StartupNotify=true

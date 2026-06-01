@@ -1,0 +1,5 @@
+GRAAL-ATTACK OS
+Usage réservé aux audits autorisés, CTF, labs internes et machines personnelles.
+
+Sortie Sanctuaire : F11 pour quitter le plein écran, Ctrl+Q pour fermer l'application.
+Désactivation autostart : rm -f ~/.config/autostart/graal-atack.desktop ~/.config/openbox/autostart
