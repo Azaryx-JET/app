@@ -12,8 +12,11 @@ import tkinter as tk
 from tkinter import filedialog, font as tkfont, messagebox, ttk
 from typing import Protocol
 
-import PIL.Image
-import PIL.ImageTk
+try:
+    import PIL.Image
+    import PIL.ImageTk
+except ImportError:  # pragma: no cover - runtime dependency is documented/packaged
+    PIL = None
 
 from modules.dependency_manager import (
     detect_package_manager,
@@ -40,6 +43,7 @@ CONFIG_DIR = Path.home() / ".config" / "graal-atack"
 CONFIG_FILE = CONFIG_DIR / "settings.ini"
 LEGACY_CONFIG_FILE = LEGACY_CONFIG_DIR / "settings.ini"
 DEFAULT_REPORTS_DIR = Path.cwd() / "reports"
+BASE_DIR = Path(__file__).resolve().parent
 LEGAL_WARNING = (
     "GRAAL-ATTACK rassemble des reliques d'audit destinées uniquement aux quêtes "
     "autorisées : CTF, laboratoires internes, audits validés et machines "
@@ -124,7 +128,7 @@ class AssetManager:
         self.base_dir = base_dir
         self.logger = logger
         self.events: list[str] = []
-        self._cache: dict[tuple[str, tuple[int, int] | None], PIL.ImageTk.PhotoImage] = {}
+        self._cache: dict[tuple[str, tuple[int, int] | None], object] = {}
 
     def _log(self, level: str, message: str) -> None:
         event = f"[{level}] {message}"
@@ -142,7 +146,7 @@ class AssetManager:
         self._log("MISSING", " | ".join(relative_paths))
         return None
 
-    def load(self, *relative_paths: str, size: tuple[int, int] | None = None) -> PIL.ImageTk.PhotoImage | None:
+    def load(self, *relative_paths: str, size: tuple[int, int] | None = None) -> object | None:
         path = self._candidate(tuple(relative_paths))
         if path is None:
             return None
@@ -150,6 +154,10 @@ class AssetManager:
         if key in self._cache:
             self._log("LOADED", f"cache {path.name} size={size or 'original'}")
             return self._cache[key]
+
+        if PIL is None:
+            self._log("ERROR", "Pillow is missing: install python3-pil and python3-pil.imagetk")
+            return None
 
         try:
             with PIL.Image.open(path) as opened:
@@ -338,7 +346,7 @@ def image_or_placeholder(
         text=placeholder,
         bg=bg or THEME["panel_alt"],
         fg=THEME["gold_light"],
-        font=(TITLE_FONT[0], max(min(size[1] // 2, 54), 24), "bold"),
+        font=(TITLE_FONT[0], max(min(size[1] // 3, 28), 16), "bold"),
         justify="center",
         wraplength=size[0],
     )
@@ -347,7 +355,7 @@ def image_or_placeholder(
 def assets_root() -> Path:
     """Return the asset directory in source or PyInstaller onefile mode."""
 
-    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    base = Path(getattr(sys, "_MEIPASS", BASE_DIR))
     return base / "assets"
 
 
@@ -406,15 +414,15 @@ class DependencyPage(ttk.Frame):
             self.assets,
             hero,
             (ASSET_ATHENA,),
-            (170, 210),
-            "⚜",
+            (200, 240),
+            "✦",
             bg=THEME["panel_alt"],
         ).grid(row=0, column=0, rowspan=2, sticky="w", padx=(0, 18))
-        tk_label(hero, "ATHÉNA — Analyse et Connaissance", 24, THEME["gold_light"], THEME["panel_alt"], True).grid(row=0, column=1, sticky="w")
+        tk_label(hero, "ATHÉNA — Analyse et Connaissance", 22, THEME["gold_light"], THEME["panel_alt"], True).grid(row=0, column=1, sticky="w")
         tk_label(
             hero,
             "Les reliques nécessaires à la quête sont vérifiées avant chaque mission. La forge utilise apt sur Debian, Kali ou Ubuntu.",
-            14,
+            13,
             THEME["muted"],
             THEME["panel_alt"],
         ).grid(row=1, column=1, sticky="w", pady=(8, 0))
@@ -563,7 +571,7 @@ class DependencyPage(ttk.Frame):
 
 class DashboardPage(ttk.Frame):
     def __init__(self, parent: tk.Misc, app: GraalAtackAppProtocol) -> None:
-        super().__init__(parent, padding=12, style="Page.TFrame")
+        super().__init__(parent, padding=14, style="Page.TFrame")
         self.app = app
         self.card_labels: dict[str, tk.Label] = {}
         self._build_widgets()
@@ -571,24 +579,39 @@ class DashboardPage(ttk.Frame):
 
     def _build_widgets(self) -> None:
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
+
+        tk_label(self, "⚜ Sanctuaire", 26, THEME["gold_light"], THEME["bg"], True).grid(
+            row=0,
+            column=0,
+            sticky="w",
+            pady=(0, 8),
+        )
 
         banner_outer = tk.Frame(self, bg=THEME["gold"], bd=0)
-        banner_outer.grid(row=0, column=0, sticky="ew", pady=(0, 10))
-        banner = tk.Frame(banner_outer, bg=THEME["panel"], height=155)
+        banner_outer.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        banner = tk.Frame(banner_outer, bg=THEME["panel"], height=180)
         banner.pack(fill="x", padx=1, pady=1)
         banner.pack_propagate(False)
         image_or_placeholder(
             self.app.assets,
             banner,
-            (ASSET_SANCTUARY_BANNER, ASSET_DASHBOARD_BACKGROUND, "banners/sanctuary_banner.png"),
-            (1040, 150),
-            "✦  LE GRAAL N’EST PAS UN OBJET, MAIS UNE QUÊTE ÉTERNELLE DE VÉRITÉ.  ✦",
+            (ASSET_SANCTUARY_BANNER, "banners/sanctuary_banner.png"),
+            (1040, 145),
+            "✦ Bannière du Sanctuaire ✦",
             bg=THEME["panel"],
-        ).pack(fill="both", expand=True)
+        ).pack(fill="both", expand=True, padx=8, pady=(8, 2))
+        tk_label(
+            banner,
+            "Le Graal n’est pas un objet, mais une quête éternelle de vérité et de perfection.",
+            13,
+            THEME["gold_light"],
+            THEME["panel"],
+            False,
+        ).pack(anchor="center", pady=(0, 6))
 
         grid = tk.Frame(self, bg=THEME["bg"])
-        grid.grid(row=1, column=0, sticky="nsew")
+        grid.grid(row=2, column=0, sticky="nsew")
         grid.columnconfigure(0, weight=3)
         grid.columnconfigure(1, weight=1)
         grid.rowconfigure(0, weight=1)
@@ -596,61 +619,67 @@ class DashboardPage(ttk.Frame):
 
         command_outer = tk.Frame(grid, bg=THEME["gold"], bd=0)
         command_outer.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=(0, 10))
-        command = tk.Frame(command_outer, bg=THEME["panel_alt"])
+        command = tk.Frame(command_outer, bg=THEME["panel_alt"], padx=12, pady=12)
         command.pack(fill="both", expand=True, padx=1, pady=1)
         command.columnconfigure(0, weight=1)
-        command.rowconfigure(0, weight=1)
-        self.dashboard_scene = self.app.assets.load(ASSET_DASHBOARD_BACKGROUND, size=(900, 360))
+        command.rowconfigure(1, weight=1)
+        tk_label(command, "Centre de commandement", 17, THEME["gold_light"], THEME["panel_alt"], True).grid(
+            row=0,
+            column=0,
+            sticky="w",
+            pady=(0, 8),
+        )
+        self.dashboard_scene = self.app.assets.load(ASSET_DASHBOARD_BACKGROUND, size=(650, 280))
         if self.dashboard_scene is not None:
             scene = tk.Label(command, image=self.dashboard_scene, bg=THEME["panel_alt"], bd=0)
             scene.image = self.dashboard_scene
-            scene.grid(row=0, column=0, sticky="nsew")
+            scene.grid(row=1, column=0, sticky="nsew")
         else:
             scene = tk.Label(
                 command,
-                text="⚜ SANCTUAIRE ⚜\nCentre de commandement cyber-mythologique",
+                text="✦ SANCTUAIRE ✦\nCentre de commandement cyber-mythologique",
                 bg=THEME["panel_alt"],
                 fg=THEME["gold_light"],
-                font=(TITLE_FONT[0], 28, "bold"),
+                font=(TITLE_FONT[0], 22, "bold"),
                 justify="center",
             )
-            scene.grid(row=0, column=0, sticky="nsew")
+            scene.grid(row=1, column=0, sticky="nsew")
 
         odin_outer = tk.Frame(grid, bg=THEME["gold"], bd=0)
         odin_outer.grid(row=0, column=1, sticky="nsew", pady=(0, 10))
-        odin = tk.Frame(odin_outer, bg=THEME["panel_alt"])
+        odin = tk.Frame(odin_outer, bg=THEME["panel_alt"], padx=10, pady=10)
         odin.pack(fill="both", expand=True, padx=1, pady=1)
         image_or_placeholder(
             self.app.assets,
             odin,
             (ASSET_ODIN,),
-            (250, 310),
-            "♛",
+            (220, 280),
+            "ODIN",
             bg=THEME["panel_alt"],
-        ).pack(anchor="center", pady=(12, 8))
-        tk_label(odin, "ODIN", 24, THEME["violet_light"], THEME["panel_alt"], True).pack(anchor="center")
-        tk_label(odin, "Gardien de la Connaissance", 12, THEME["muted"], THEME["panel_alt"]).pack(anchor="center", pady=(2, 12))
+        ).pack(anchor="center", pady=(2, 6))
+        tk_label(odin, "ODIN", 22, THEME["violet_light"], THEME["panel_alt"], True).pack(anchor="center")
+        tk_label(odin, "Gardien de la connaissance", 12, THEME["muted"], THEME["panel_alt"]).pack(anchor="center", pady=(2, 4))
 
         cards = tk.Frame(grid, bg=THEME["bg"])
         cards.grid(row=1, column=0, columnspan=2, sticky="ew")
         card_defs = (
             ("tools", "⚔", "Outils installés", "Reliques prêtes au combat"),
-            ("dependencies", "⚜", "Dépendances", "Statut des reliques"),
-            ("reports", "📜", "Archives de Quêtes", "Parchemins générés"),
-            ("target", "◉", "Dernière cible", "Cible de quête"),
-            ("system", "⛨", "État système", "Mode sanctuaire"),
+            ("dependencies", "✦", "Dépendances", "Statut des reliques"),
+            ("reports", "§", "Archives de Quêtes", "Parchemins générés"),
+            ("target", "◈", "Dernière cible", "Cible de quête"),
+            ("system", "◈", "État système", "Mode sanctuaire"),
         )
         for index, (key, icon, title, subtitle) in enumerate(card_defs):
             cards.columnconfigure(index, weight=1, uniform="dashboard_cards")
             outer = tk.Frame(cards, bg=THEME["gold"], bd=0)
-            outer.grid(row=0, column=index, sticky="nsew", padx=(0 if index == 0 else 6, 0 if index == len(card_defs) - 1 else 6))
-            card = tk.Frame(outer, bg=THEME["panel_alt"], padx=14, pady=12, height=145)
+            outer.grid(row=0, column=index, sticky="nsew", padx=(0 if index == 0 else 5, 0 if index == len(card_defs) - 1 else 5))
+            card = tk.Frame(outer, bg="#15110d", padx=14, pady=12, height=125)
             card.pack(fill="both", expand=True, padx=1, pady=1)
             card.pack_propagate(False)
-            tk_label(card, f"{icon}  {title}", 13, THEME["gold_light"], THEME["panel_alt"], True).pack(anchor="w")
-            value = tk_label(card, "-", 25, THEME["violet_light"], THEME["panel_alt"], True)
-            value.pack(anchor="w", pady=(15, 5))
-            tk_label(card, subtitle, 10, THEME["muted"], THEME["panel_alt"]).pack(anchor="w")
+            tk_label(card, f"{icon} {title}", 15, "#f1d27a", "#15110d", True).pack(anchor="w")
+            value = tk_label(card, "-", 28, THEME["violet_light"], "#15110d", True)
+            value.pack(anchor="w", pady=(10, 3))
+            tk_label(card, subtitle, 11, THEME["muted"], "#15110d").pack(anchor="w")
             self.card_labels[key] = value
 
     def refresh_dashboard(self) -> None:
@@ -689,12 +718,12 @@ class ToolsPage(ttk.Frame):
             self.app.assets,
             hero,
             (ASSET_ARES,),
-            (180, 220),
+            (200, 240),
             "⚔",
             bg=THEME["panel_alt"],
         ).grid(row=0, column=0, rowspan=2, sticky="w", padx=(0, 18))
-        tk_label(hero, "ARÈS — Conduite des Missions", 24, THEME["gold_light"], THEME["panel_alt"], True).grid(row=0, column=1, sticky="w")
-        tk_label(hero, "Choisissez une quête non destructive et consignez son grimoire d’exécution.", 14, THEME["muted"], THEME["panel_alt"]).grid(row=1, column=1, sticky="w", pady=(8, 0))
+        tk_label(hero, "ARÈS — Conduite des Missions", 22, THEME["gold_light"], THEME["panel_alt"], True).grid(row=0, column=1, sticky="w")
+        tk_label(hero, "Choisissez une quête non destructive et consignez son grimoire d’exécution.", 13, THEME["muted"], THEME["panel_alt"]).grid(row=1, column=1, sticky="w", pady=(8, 0))
         target_bar = ttk.Frame(self, style="Page.TFrame")
         target_bar.pack(fill="x", pady=(0, 8))
         ttk.Label(target_bar, text="Cible de quête:", style="Gold.TLabel").pack(side="left")
@@ -909,12 +938,12 @@ class ReportsPage(ttk.Frame):
             self.app.assets,
             hero,
             (ASSET_HADES,),
-            (180, 220),
-            "📜",
+            (200, 240),
+            "§",
             bg=THEME["panel_alt"],
         ).grid(row=0, column=0, rowspan=2, sticky="w", padx=(0, 18))
-        tk_label(hero, "HADÈS — Gardien des Archives", 24, THEME["gold_light"], THEME["panel_alt"], True).grid(row=0, column=1, sticky="w")
-        tk_label(hero, "Les parchemins des quêtes sont conservés dans les cryptes du Sanctuaire.", 14, THEME["muted"], THEME["panel_alt"]).grid(row=1, column=1, sticky="w", pady=(8, 0))
+        tk_label(hero, "HADÈS — Gardien des Archives", 22, THEME["gold_light"], THEME["panel_alt"], True).grid(row=0, column=1, sticky="w")
+        tk_label(hero, "Les parchemins des quêtes sont conservés dans les cryptes du Sanctuaire.", 13, THEME["muted"], THEME["panel_alt"]).grid(row=1, column=1, sticky="w", pady=(8, 0))
         top = ttk.Frame(self, style="Page.TFrame")
         top.pack(fill="x", pady=(0, 8))
         ttk.Button(top, text="✧ Révéler les archives", command=self.refresh_reports).pack(side="right")
@@ -1112,7 +1141,7 @@ class GraalAtackApp(tk.Tk):
         self.fullscreen_enabled = False
         self.title(APP_NAME)
         self.geometry("1400x900")
-        self.minsize(1400, 900)
+        self.minsize(1200, 750)
         asset_dir = assets_root()
         self.assets = AssetManager(asset_dir)
         self.fonts = FontManager(self, asset_dir / "fonts")
@@ -1137,7 +1166,7 @@ class GraalAtackApp(tk.Tk):
         root = ttk.Frame(self, style="Root.TFrame")
         root.pack(fill="both", expand=True)
 
-        header = ttk.Frame(root, padding=(14, 8), height=140, style="Header.TFrame")
+        header = ttk.Frame(root, padding=(12, 6), height=120, style="Header.TFrame")
         header.pack(side="top", fill="x")
         header.pack_propagate(False)
         header_inner = ttk.Frame(header, style="Header.TFrame")
@@ -1153,7 +1182,7 @@ class GraalAtackApp(tk.Tk):
         ).pack(side="left", padx=(0, 16))
         title_box = ttk.Frame(header_inner, style="Header.TFrame")
         title_box.pack(side="left")
-        ttk.Label(title_box, text="♕  GRAAL-ATTACK  ♛", style="HeaderTitle.TLabel").pack(anchor="center")
+        ttk.Label(title_box, text="GRAAL-ATTACK", style="HeaderTitle.TLabel").pack(anchor="center")
         ttk.Label(title_box, text=SUBTITLE, style="HeaderSubtitle.TLabel").pack(anchor="center", pady=(3, 6))
         ttk.Label(title_box, text="✧ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✧", style="Gold.TLabel").pack(anchor="center")
 
@@ -1168,11 +1197,11 @@ class GraalAtackApp(tk.Tk):
             ASSET_LOGO,
             ASSET_GUARDIAN,
             "graal.png",
-            size=(92, 92),
+            size=(120, 88),
             placeholder="🏆",
             style="LogoIcon.TLabel",
         ).pack(anchor="center")
-        ttk.Label(self.sidebar, text="GRAAL-ATTACK", style="SidebarTitle.TLabel").pack(anchor="center", pady=(10, 4))
+        ttk.Label(self.sidebar, text="GRAAL-ATTACK", style="SidebarTitle.TLabel").pack(anchor="center", pady=(6, 2))
         ttk.Label(
             self.sidebar,
             text="Sanctuaire d'Audit et de Supervision",
@@ -1180,7 +1209,7 @@ class GraalAtackApp(tk.Tk):
             wraplength=230,
             justify="center",
         ).pack(anchor="center", pady=(0, 5))
-        ttk.Label(self.sidebar, text=APP_VERSION, style="Muted.TLabel").pack(anchor="center", pady=(0, 10))
+        ttk.Label(self.sidebar, text=APP_VERSION, style="Muted.TLabel").pack(anchor="center", pady=(0, 8))
 
         self.notebook = ttk.Notebook(body)
         self.notebook.pack(side="right", fill="both", expand=True)
@@ -1192,10 +1221,10 @@ class GraalAtackApp(tk.Tk):
         self.settings_page = SettingsPage(self.notebook, self)
 
         self.pages = {
-            "dashboard": (self.dashboard_page, "🛡 Sanctuaire"),
-            "dependencies": (self.dependency_page, "⚜ Reliques"),
+            "dashboard": (self.dashboard_page, "⚜ Sanctuaire"),
+            "dependencies": (self.dependency_page, "✦ Reliques"),
             "tools": (self.tools_page, "⚔ Missions"),
-            "reports": (self.reports_page, "📜 Archives"),
+            "reports": (self.reports_page, "§ Archives"),
             "settings": (self.settings_page, "⚙ Autel"),
         }
         for page, title in self.pages.values():
@@ -1214,12 +1243,12 @@ class GraalAtackApp(tk.Tk):
             style="Sidebar.TButton",
             command=lambda: self.set_fullscreen(False),
         ).pack(fill="x", pady=3)
-        ttk.Button(self.sidebar, text="✠ Quitter (Ctrl+Q)", style="Danger.TButton", command=self.safe_quit).pack(fill="x", pady=(8, 3))
+        ttk.Button(self.sidebar, text="✖ Quitter (Ctrl+Q)", style="Danger.TButton", command=self.safe_quit).pack(fill="x", pady=(8, 3))
         self.assets.label(
             self.sidebar,
             ASSET_GUARDIAN,
             ASSET_ATHENA,
-            size=(132, 150),
+            size=(170, 190),
             placeholder="🛡",
             style="Portrait.TLabel",
         ).pack(anchor="center", pady=(10, 5))

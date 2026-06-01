@@ -16,7 +16,6 @@ LogCallback = Callable[[str], None]
 
 APT_INSTALL_TIMEOUT_SECONDS = 900
 APT_UPDATE_TIMEOUT_SECONDS = 600
-CHECK_TIMEOUT_SECONDS = 5
 
 
 @dataclass(frozen=True)
@@ -77,24 +76,7 @@ def check_command_exists(command: str) -> str | None:
 
     if not command or any(separator in command for separator in ("/", "\\", "\x00")):
         return None
-    path = shutil.which(command)
-    if not path:
-        return None
-
-    try:
-        # A tiny non-destructive command confirms that the binary can at least be
-        # executed. Some tools return non-zero for --version, so timeout and OS
-        # errors are the only hard failures here.
-        subprocess.run(
-            [path, "--version"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=CHECK_TIMEOUT_SECONDS,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return path
-    return path
+    return shutil.which(command)
 
 
 def detect_package_manager() -> str | None:
