@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import configparser
+import importlib.util
 from datetime import datetime
 from pathlib import Path
 import queue
@@ -10,6 +11,16 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from typing import Protocol
+
+PIL_AVAILABLE = all(
+    importlib.util.find_spec(module_name) is not None
+    for module_name in ("PIL", "PIL.Image", "PIL.ImageTk")
+)
+if PIL_AVAILABLE:
+    from PIL import Image, ImageTk
+else:
+    Image = None
+    ImageTk = None
 
 from modules.dependency_manager import (
     detect_package_manager,
@@ -90,6 +101,72 @@ TOOL_LABELS = {
     "tcpdump_list": "◉ Tcpdump — Observer les ondes",
     "wireshark": "♛ Wireshark — Oeil du chevalier",
 }
+
+
+class AssetManager:
+    """Optional image loader for premium GRAAL-ATACK artwork.
+
+    Missing assets never break the UI. JPEG/WebP resizing uses Pillow when it is
+    installed; PNG/GIF still work through Tk's native PhotoImage fallback.
+    """
+
+    def __init__(self, base_dir: Path) -> None:
+        self.base_dir = base_dir
+        self._cache: dict[tuple[str, tuple[int, int] | None], tk.PhotoImage] = {}
+
+    def _candidate(self, relative_paths: tuple[str, ...]) -> Path | None:
+        for relative_path in relative_paths:
+            path = self.base_dir / relative_path
+            if path.exists() and path.is_file():
+                return path
+        return None
+
+    def load(self, *relative_paths: str, size: tuple[int, int] | None = None) -> tk.PhotoImage | None:
+        path = self._candidate(tuple(relative_paths))
+        if path is None:
+            return None
+        key = (str(path), size)
+        if key in self._cache:
+            return self._cache[key]
+
+        photo: tk.PhotoImage | None = None
+        try:
+            if PIL_AVAILABLE and Image is not None and ImageTk is not None:
+                image = Image.open(path)
+                if size is not None:
+                    image.thumbnail(size)
+                photo = ImageTk.PhotoImage(image)
+            elif path.suffix.lower() in {".png", ".gif"}:
+                native = tk.PhotoImage(file=str(path))
+                if size is not None:
+                    width = max(native.width(), 1)
+                    height = max(native.height(), 1)
+                    factor = max((width + size[0] - 1) // size[0], (height + size[1] - 1) // size[1], 1)
+                    native = native.subsample(factor, factor)
+                photo = native
+        except (OSError, tk.TclError):
+            return None
+
+        if photo is None:
+            return None
+        self._cache[key] = photo
+        return photo
+
+    def label(
+        self,
+        parent: tk.Misc,
+        *relative_paths: str,
+        size: tuple[int, int] | None = None,
+        placeholder: str = "✦",
+        style: str = "ImagePlaceholder.TLabel",
+        **kwargs: object,
+    ) -> ttk.Label:
+        photo = self.load(*relative_paths, size=size)
+        if photo is None:
+            return ttk.Label(parent, text=placeholder, style=style, **kwargs)
+        label = ttk.Label(parent, image=photo, style=style, **kwargs)
+        label.image = photo
+        return label
 
 
 def load_settings() -> dict[str, object]:
@@ -305,12 +382,15 @@ class DashboardPage(ttk.Frame):
         ttk.Label(self, text="♕ Sanctuaire", style="PageTitle.TLabel").pack(anchor="w")
         banner = ttk.Frame(self, padding=16, style="Card.TFrame")
         banner.pack(fill="x", pady=(10, 18))
-        ttk.Label(
+        self.app.assets.label(
             banner,
-            text="✦ Le Graal n’est pas un objet, mais une quête éternelle de vérité et de perfection. ✦",
+            "banners/sanctuary_banner.jpg",
+            "banners/sanctuary_banner.png",
+            "backgrounds/dashboard.jpg",
+            "backgrounds/dashboard.png",
+            size=(980, 180),
+            placeholder="✦  Le Graal n’est pas un objet, mais une quête éternelle de vérité et de perfection.  ✦",
             style="Banner.TLabel",
-            wraplength=980,
-            justify="center",
         ).pack(fill="x")
         ttk.Label(
             self,
@@ -321,18 +401,24 @@ class DashboardPage(ttk.Frame):
         cards = ttk.Frame(self, style="Page.TFrame")
         cards.pack(fill="x")
         card_defs = (
-            ("tools", "⚔", "Outils Totaux", "Reliques prêtes au combat"),
-            ("dependencies", "⚜", "Dépendances", "Statut des reliques"),
-            ("reports", "📜", "Archives de Quêtes", "Parchemins générés"),
-            ("system", "⛨", "Système", "Mode sanctuaire"),
+            ("tools", "⚔", "Outils Totaux", "Reliques prêtes au combat", "gods/ares.png"),
+            ("dependencies", "⚜", "Dépendances", "Statut des reliques", "portraits/guardian.png"),
+            ("reports", "📜", "Archives de Quêtes", "Parchemins générés", "gods/hades.png"),
+            ("system", "⛨", "Système", "Mode sanctuaire", "gods/odin.png"),
         )
-        for index, (key, icon, title, subtitle) in enumerate(card_defs):
+        for index, (key, icon, title, subtitle, image_path) in enumerate(card_defs):
             card = ttk.Frame(cards, padding=16, style="Card.TFrame")
             card.grid(row=index // 2, column=index % 2, sticky="nsew", padx=8, pady=8)
             cards.columnconfigure(index % 2, weight=1)
             top = ttk.Frame(card, style="Card.TFrame")
             top.pack(fill="x")
-            ttk.Label(top, text=icon, style="CardIcon.TLabel").pack(side="left", padx=(0, 12))
+            self.app.assets.label(
+                top,
+                image_path,
+                size=(88, 88),
+                placeholder=icon,
+                style="CardIcon.TLabel",
+            ).pack(side="left", padx=(0, 12))
             title_box = ttk.Frame(top, style="Card.TFrame")
             title_box.pack(side="left", fill="x", expand=True)
             ttk.Label(title_box, text=title, style="CardTitle.TLabel").pack(anchor="w")
@@ -787,14 +873,16 @@ class GraalAtackApp(tk.Tk):
         self.geometry("1120x760")
         self.minsize(980, 650)
         asset_dir = Path(__file__).resolve().parent / "assets"
-        for icon_name in ("logo.png", "graal.png", "icon.png"):
-            icon_path = asset_dir / icon_name
-            if icon_path.exists():
-                try:
-                    self.iconphoto(True, tk.PhotoImage(file=str(icon_path)))
-                    break
-                except tk.TclError:
-                    pass
+        self.assets = AssetManager(asset_dir)
+        window_icon = self.assets.load(
+            "logos/graal_logo.png",
+            "icons/app.png",
+            "graal.png",
+            "icon.png",
+            size=(96, 96),
+        )
+        if window_icon is not None:
+            self.iconphoto(True, window_icon)
         ensure_reports_dir(Path(str(self.settings["reports_dir"])).expanduser())
         self._build_ui()
         self._bind_shortcuts()
@@ -809,9 +897,22 @@ class GraalAtackApp(tk.Tk):
 
         header = ttk.Frame(root, padding=(18, 14), style="Header.TFrame")
         header.pack(side="top", fill="x")
-        ttk.Label(header, text="♕  GRAAL-ATTACK  ♛", style="HeaderTitle.TLabel").pack(anchor="center")
-        ttk.Label(header, text=SUBTITLE, style="HeaderSubtitle.TLabel").pack(anchor="center", pady=(3, 6))
-        ttk.Label(header, text="✧ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✧", style="Gold.TLabel").pack(anchor="center")
+        header_inner = ttk.Frame(header, style="Header.TFrame")
+        header_inner.pack(anchor="center")
+        self.assets.label(
+            header_inner,
+            "logos/graal_logo.png",
+            "banners/header_sigils.png",
+            "graal.png",
+            size=(88, 88),
+            placeholder="♕",
+            style="HeaderIcon.TLabel",
+        ).pack(side="left", padx=(0, 16))
+        title_box = ttk.Frame(header_inner, style="Header.TFrame")
+        title_box.pack(side="left")
+        ttk.Label(title_box, text="♕  GRAAL-ATTACK  ♛", style="HeaderTitle.TLabel").pack(anchor="center")
+        ttk.Label(title_box, text=SUBTITLE, style="HeaderSubtitle.TLabel").pack(anchor="center", pady=(3, 6))
+        ttk.Label(title_box, text="✧ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✧", style="Gold.TLabel").pack(anchor="center")
 
         body = ttk.Frame(root, style="Root.TFrame")
         body.pack(side="top", fill="both", expand=True)
@@ -819,7 +920,15 @@ class GraalAtackApp(tk.Tk):
         self.sidebar = ttk.Frame(body, padding=14, width=220, style="Sidebar.TFrame")
         self.sidebar.pack(side="left", fill="y")
         self.sidebar.pack_propagate(False)
-        ttk.Label(self.sidebar, text="🏆", style="LogoIcon.TLabel").pack(anchor="center")
+        self.assets.label(
+            self.sidebar,
+            "logos/graal_logo.png",
+            "portraits/guardian.png",
+            "graal.png",
+            size=(120, 120),
+            placeholder="🏆",
+            style="LogoIcon.TLabel",
+        ).pack(anchor="center")
         ttk.Label(self.sidebar, text="GRAAL-ATTACK", style="SidebarTitle.TLabel").pack(anchor="center", pady=(0, 2))
         ttk.Label(self.sidebar, text=APP_VERSION, style="Muted.TLabel").pack(anchor="center", pady=(0, 14))
 
@@ -855,8 +964,16 @@ class GraalAtackApp(tk.Tk):
             command=lambda: self.set_fullscreen(False),
         ).pack(fill="x", pady=4)
         ttk.Button(self.sidebar, text="✠ Quitter (Ctrl+Q)", command=self.safe_quit).pack(fill="x", pady=(14, 4))
+        self.assets.label(
+            self.sidebar,
+            "portraits/guardian.png",
+            "gods/athena.png",
+            size=(150, 180),
+            placeholder="🛡",
+            style="Portrait.TLabel",
+        ).pack(anchor="center", pady=(18, 8))
         ttk.Label(self.sidebar, text=f"“{QUOTE}”", style="Quote.TLabel", wraplength=180, justify="center").pack(
-            anchor="center", pady=(18, 10)
+            anchor="center", pady=(8, 10)
         )
         ttk.Label(self.sidebar, text="Statut : EN VEILLE", style="Status.TLabel").pack(anchor="center", pady=(0, 8))
         ttk.Label(
@@ -986,7 +1103,10 @@ class GraalAtackApp(tk.Tk):
         style.configure("HeaderTitle.TLabel", background=THEME["bg_alt"], foreground=gold_light, font=(title_family, 28, "bold"))
         style.configure("HeaderSubtitle.TLabel", background=THEME["bg_alt"], foreground=muted, font=(body_family, 11, "italic"))
         style.configure("SidebarTitle.TLabel", background=panel, foreground=gold_light, font=(title_family, 15, "bold"))
-        style.configure("LogoIcon.TLabel", background=panel, foreground=gold_light, font=(title_family, 28, "bold"))
+        style.configure("LogoIcon.TLabel", background=panel, foreground=gold_light, font=(title_family, 42, "bold"))
+        style.configure("HeaderIcon.TLabel", background=THEME["bg_alt"], foreground=gold_light, font=(title_family, 46, "bold"))
+        style.configure("Portrait.TLabel", background=panel, foreground=THEME["violet_light"], font=(title_family, 40, "bold"))
+        style.configure("ImagePlaceholder.TLabel", background=panel_alt, foreground=THEME["violet_light"], font=(title_family, 28, "bold"))
         style.configure("Quote.TLabel", background=panel, foreground=muted, font=(body_family, 9, "italic"))
         style.configure("Status.TLabel", background=panel, foreground=THEME["success"], font=(body_family, 10, "bold"))
         style.configure("Banner.TLabel", background=panel_alt, foreground=gold_light, font=(title_family, 15, "italic"))

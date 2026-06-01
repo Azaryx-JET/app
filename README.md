@@ -58,11 +58,31 @@ Le script :
 - conserve la compatibilité `/usr/local/bin/azaryx-tools` ;
 - crée le raccourci `/usr/share/applications/graal-atack.desktop` et une copie compatible `azaryx-tools.desktop`.
 
-## Branding optionnel
+## Illustrations et branding optionnels
 
-Aucune image binaire n'est obligatoire. Si `assets/logo.png`, `assets/graal.png` ou `assets/icon.png` sont absents, l'application utilise les symboles Unicode du Graal. Si `assets/wallpaper.png` ou `os-builder/branding/wallpaper.png` sont absents, les scripts ignorent simplement le fond d'écran.
+Aucune image binaire n'est obligatoire dans le dépôt. L'application est conçue pour accueillir des illustrations premium dark fantasy si elles sont ajoutées localement, et elle affiche des placeholders Unicode élégants si elles sont absentes.
 
-Voir `assets/theme_notes.md` pour la palette dark fantasy, les symboles et les futures images optionnelles.
+Arborescence prévue :
+
+```text
+assets/
+├── backgrounds/
+├── logos/
+├── gods/
+├── icons/
+├── banners/
+└── portraits/
+```
+
+Exemples automatiquement détectés :
+
+- `assets/logos/graal_logo.png` pour le header, la sidebar et l'icône de fenêtre ;
+- `assets/banners/sanctuary_banner.jpg` pour la bannière du Sanctuaire ;
+- `assets/backgrounds/dashboard.jpg` comme bannière de secours ;
+- `assets/gods/odin.png`, `hades.png`, `ares.png` pour les cartes ;
+- `assets/gods/athena.png` et `assets/portraits/guardian.png` pour la sidebar et les cartes.
+
+PNG/GIF fonctionnent avec Tk. Les JPEG/WebP et le redimensionnement plus propre sont utilisés automatiquement si Pillow est installé. Voir `assets/theme_notes.md` pour les prompts, usages et recherches Google Images recommandées.
 
 ## Onglet Sanctuaire
 
