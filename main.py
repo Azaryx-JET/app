@@ -563,84 +563,95 @@ class DependencyPage(ttk.Frame):
 
 class DashboardPage(ttk.Frame):
     def __init__(self, parent: tk.Misc, app: GraalAtackAppProtocol) -> None:
-        super().__init__(parent, padding=0, style="Page.TFrame")
+        super().__init__(parent, padding=12, style="Page.TFrame")
         self.app = app
         self.card_labels: dict[str, tk.Label] = {}
         self._build_widgets()
         self.refresh_dashboard()
 
     def _build_widgets(self) -> None:
-        self.canvas = tk.Canvas(self, bg=THEME["bg"], highlightthickness=0, bd=0)
-        self.canvas.pack(fill="both", expand=True)
-        self.bg_photo = self.app.assets.load(
-            ASSET_DASHBOARD_BACKGROUND,
-            "backgrounds/dashboard.png",
-            size=(1600, 900),
-        )
-        self.content = tk.Frame(self.canvas, bg=THEME["bg"])
-        self.canvas_window = self.canvas.create_window(0, 0, window=self.content, anchor="nw")
-        self.canvas.bind("<Configure>", self._resize_canvas)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
 
-        banner_outer, banner = premium_panel(self.content, padding=10, bg=THEME["panel"])
-        banner_outer.pack(fill="x", padx=24, pady=(22, 18))
+        banner_outer = tk.Frame(self, bg=THEME["gold"], bd=0)
+        banner_outer.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        banner = tk.Frame(banner_outer, bg=THEME["panel"], height=155)
+        banner.pack(fill="x", padx=1, pady=1)
+        banner.pack_propagate(False)
         image_or_placeholder(
             self.app.assets,
             banner,
-            (ASSET_SANCTUARY_BANNER, "banners/sanctuary_banner.png"),
-            (1420, 250),
-            "✦  Le Graal n’est pas un objet, mais une quête éternelle de vérité et de perfection.  ✦",
+            (ASSET_SANCTUARY_BANNER, ASSET_DASHBOARD_BACKGROUND, "banners/sanctuary_banner.png"),
+            (1040, 150),
+            "✦  LE GRAAL N’EST PAS UN OBJET, MAIS UNE QUÊTE ÉTERNELLE DE VÉRITÉ.  ✦",
             bg=THEME["panel"],
-        ).pack(fill="x")
+        ).pack(fill="both", expand=True)
 
-        hero_outer, hero = premium_panel(self.content, padding=18, bg=THEME["panel_alt"])
-        hero_outer.pack(fill="x", padx=24, pady=(0, 20))
-        hero.columnconfigure(1, weight=1)
+        grid = tk.Frame(self, bg=THEME["bg"])
+        grid.grid(row=1, column=0, sticky="nsew")
+        grid.columnconfigure(0, weight=3)
+        grid.columnconfigure(1, weight=1)
+        grid.rowconfigure(0, weight=1)
+        grid.rowconfigure(1, weight=0)
+
+        command_outer = tk.Frame(grid, bg=THEME["gold"], bd=0)
+        command_outer.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=(0, 10))
+        command = tk.Frame(command_outer, bg=THEME["panel_alt"])
+        command.pack(fill="both", expand=True, padx=1, pady=1)
+        command.columnconfigure(0, weight=1)
+        command.rowconfigure(0, weight=1)
+        self.dashboard_scene = self.app.assets.load(ASSET_DASHBOARD_BACKGROUND, size=(900, 360))
+        if self.dashboard_scene is not None:
+            scene = tk.Label(command, image=self.dashboard_scene, bg=THEME["panel_alt"], bd=0)
+            scene.image = self.dashboard_scene
+            scene.grid(row=0, column=0, sticky="nsew")
+        else:
+            scene = tk.Label(
+                command,
+                text="⚜ SANCTUAIRE ⚜\nCentre de commandement cyber-mythologique",
+                bg=THEME["panel_alt"],
+                fg=THEME["gold_light"],
+                font=(TITLE_FONT[0], 28, "bold"),
+                justify="center",
+            )
+            scene.grid(row=0, column=0, sticky="nsew")
+
+        odin_outer = tk.Frame(grid, bg=THEME["gold"], bd=0)
+        odin_outer.grid(row=0, column=1, sticky="nsew", pady=(0, 10))
+        odin = tk.Frame(odin_outer, bg=THEME["panel_alt"])
+        odin.pack(fill="both", expand=True, padx=1, pady=1)
         image_or_placeholder(
             self.app.assets,
-            hero,
+            odin,
             (ASSET_ODIN,),
-            (260, 300),
+            (250, 310),
             "♛",
             bg=THEME["panel_alt"],
-        ).grid(row=0, column=0, rowspan=3, sticky="nsw", padx=(0, 22))
-        tk_label(hero, "ODIN — Gardien de la Connaissance", 28, THEME["gold_light"], THEME["panel_alt"], True).grid(row=0, column=1, sticky="w")
-        tk_label(
-            hero,
-            "Sanctuaire de supervision mystique : les reliques, les archives et l’état du système convergent dans la grande salle du Graal.",
-            15,
-            THEME["muted"],
-            THEME["panel_alt"],
-        ).grid(row=1, column=1, sticky="w", pady=(8, 18))
-        tk_label(hero, "✧ Centre de commandement cyber-mythologique ✧", 17, THEME["violet_light"], THEME["panel_alt"], True).grid(row=2, column=1, sticky="w")
+        ).pack(anchor="center", pady=(12, 8))
+        tk_label(odin, "ODIN", 24, THEME["violet_light"], THEME["panel_alt"], True).pack(anchor="center")
+        tk_label(odin, "Gardien de la Connaissance", 12, THEME["muted"], THEME["panel_alt"]).pack(anchor="center", pady=(2, 12))
 
-        cards = tk.Frame(self.content, bg=THEME["bg"])
-        cards.pack(fill="x", padx=24, pady=(0, 18))
+        cards = tk.Frame(grid, bg=THEME["bg"])
+        cards.grid(row=1, column=0, columnspan=2, sticky="ew")
         card_defs = (
-            ("tools", "⚔", "Outils installés", "Reliques prêtes"),
-            ("dependencies", "⚜", "Dépendances", "État des reliques"),
-            ("reports", "📜", "Archives", "Quêtes consignées"),
+            ("tools", "⚔", "Outils installés", "Reliques prêtes au combat"),
+            ("dependencies", "⚜", "Dépendances", "Statut des reliques"),
+            ("reports", "📜", "Archives de Quêtes", "Parchemins générés"),
             ("target", "◉", "Dernière cible", "Cible de quête"),
-            ("system", "⛨", "État système", "Mode Sanctuaire"),
+            ("system", "⛨", "État système", "Mode sanctuaire"),
         )
         for index, (key, icon, title, subtitle) in enumerate(card_defs):
-            outer, card = premium_panel(cards, padding=16, bg=THEME["panel_alt"])
-            outer.grid(row=0, column=index, sticky="nsew", padx=7)
-            cards.columnconfigure(index, weight=1)
-            top = tk.Frame(card, bg=THEME["panel_alt"])
-            top.pack(fill="x")
-            tk_label(top, icon, 28, THEME["gold_light"], THEME["panel_alt"], True).pack(side="left", padx=(0, 10))
-            tk_label(top, title, 13, THEME["muted"], THEME["panel_alt"], True).pack(side="left", anchor="n")
-            value = tk_label(card, "-", 24, THEME["violet_light"], THEME["panel_alt"], True)
-            value.pack(anchor="w", pady=(14, 4))
+            cards.columnconfigure(index, weight=1, uniform="dashboard_cards")
+            outer = tk.Frame(cards, bg=THEME["gold"], bd=0)
+            outer.grid(row=0, column=index, sticky="nsew", padx=(0 if index == 0 else 6, 0 if index == len(card_defs) - 1 else 6))
+            card = tk.Frame(outer, bg=THEME["panel_alt"], padx=14, pady=12, height=145)
+            card.pack(fill="both", expand=True, padx=1, pady=1)
+            card.pack_propagate(False)
+            tk_label(card, f"{icon}  {title}", 13, THEME["gold_light"], THEME["panel_alt"], True).pack(anchor="w")
+            value = tk_label(card, "-", 25, THEME["violet_light"], THEME["panel_alt"], True)
+            value.pack(anchor="w", pady=(15, 5))
             tk_label(card, subtitle, 10, THEME["muted"], THEME["panel_alt"]).pack(anchor="w")
             self.card_labels[key] = value
-
-    def _resize_canvas(self, event: tk.Event) -> None:
-        self.canvas.itemconfigure(self.canvas_window, width=event.width)
-        if self.bg_photo is not None:
-            self.canvas.delete("bg")
-            self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw", tags="bg")
-            self.canvas.tag_lower("bg")
 
     def refresh_dashboard(self) -> None:
         statuses = get_tool_statuses()
@@ -1100,8 +1111,8 @@ class GraalAtackApp(tk.Tk):
         self.settings = load_settings()
         self.fullscreen_enabled = False
         self.title(APP_NAME)
-        self.geometry("1600x900")
-        self.minsize(1600, 900)
+        self.geometry("1400x900")
+        self.minsize(1400, 900)
         asset_dir = assets_root()
         self.assets = AssetManager(asset_dir)
         self.fonts = FontManager(self, asset_dir / "fonts")
@@ -1126,8 +1137,9 @@ class GraalAtackApp(tk.Tk):
         root = ttk.Frame(self, style="Root.TFrame")
         root.pack(fill="both", expand=True)
 
-        header = ttk.Frame(root, padding=(18, 14), style="Header.TFrame")
+        header = ttk.Frame(root, padding=(14, 8), height=140, style="Header.TFrame")
         header.pack(side="top", fill="x")
+        header.pack_propagate(False)
         header_inner = ttk.Frame(header, style="Header.TFrame")
         header_inner.pack(anchor="center")
         self.assets.label(
@@ -1135,7 +1147,7 @@ class GraalAtackApp(tk.Tk):
             ASSET_LOGO,
             "banners/header_sigils.png",
             "graal.png",
-            size=(88, 88),
+            size=(64, 64),
             placeholder="♕",
             style="HeaderIcon.TLabel",
         ).pack(side="left", padx=(0, 16))
@@ -1143,12 +1155,12 @@ class GraalAtackApp(tk.Tk):
         title_box.pack(side="left")
         ttk.Label(title_box, text="♕  GRAAL-ATTACK  ♛", style="HeaderTitle.TLabel").pack(anchor="center")
         ttk.Label(title_box, text=SUBTITLE, style="HeaderSubtitle.TLabel").pack(anchor="center", pady=(3, 6))
-        ttk.Label(title_box, text="✧ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✧", style="Gold.TLabel").pack(anchor="center")
+        ttk.Label(title_box, text="✧ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ✧", style="Gold.TLabel").pack(anchor="center")
 
         body = ttk.Frame(root, style="Root.TFrame")
         body.pack(side="top", fill="both", expand=True)
 
-        self.sidebar = ttk.Frame(body, padding=20, width=310, style="Sidebar.TFrame")
+        self.sidebar = ttk.Frame(body, padding=12, width=280, style="Sidebar.TFrame")
         self.sidebar.pack(side="left", fill="y")
         self.sidebar.pack_propagate(False)
         self.assets.label(
@@ -1156,7 +1168,7 @@ class GraalAtackApp(tk.Tk):
             ASSET_LOGO,
             ASSET_GUARDIAN,
             "graal.png",
-            size=(120, 120),
+            size=(92, 92),
             placeholder="🏆",
             style="LogoIcon.TLabel",
         ).pack(anchor="center")
@@ -1165,10 +1177,10 @@ class GraalAtackApp(tk.Tk):
             self.sidebar,
             text="Sanctuaire d'Audit et de Supervision",
             style="SidebarSubtitle.TLabel",
-            wraplength=245,
+            wraplength=230,
             justify="center",
         ).pack(anchor="center", pady=(0, 5))
-        ttk.Label(self.sidebar, text=APP_VERSION, style="Muted.TLabel").pack(anchor="center", pady=(0, 18))
+        ttk.Label(self.sidebar, text=APP_VERSION, style="Muted.TLabel").pack(anchor="center", pady=(0, 10))
 
         self.notebook = ttk.Notebook(body)
         self.notebook.pack(side="right", fill="both", expand=True)
@@ -1191,37 +1203,37 @@ class GraalAtackApp(tk.Tk):
 
         for key, (_, title) in self.pages.items():
             ttk.Button(self.sidebar, text=title, style="Sidebar.TButton", command=lambda page_key=key: self.select_page(page_key)).pack(
-                fill="x", pady=5
+                fill="x", pady=3
             )
-        ttk.Separator(self.sidebar).pack(fill="x", pady=12)
+        ttk.Separator(self.sidebar).pack(fill="x", pady=8)
         self.fullscreen_button = ttk.Button(self.sidebar, text="Entrer dans le Sanctuaire", style="Sidebar.TButton", command=self.toggle_fullscreen)
-        self.fullscreen_button.pack(fill="x", pady=4)
+        self.fullscreen_button.pack(fill="x", pady=3)
         ttk.Button(
             self.sidebar,
             text="Quitter le Sanctuaire",
             style="Sidebar.TButton",
             command=lambda: self.set_fullscreen(False),
-        ).pack(fill="x", pady=4)
-        ttk.Button(self.sidebar, text="✠ Quitter (Ctrl+Q)", style="Danger.TButton", command=self.safe_quit).pack(fill="x", pady=(14, 4))
+        ).pack(fill="x", pady=3)
+        ttk.Button(self.sidebar, text="✠ Quitter (Ctrl+Q)", style="Danger.TButton", command=self.safe_quit).pack(fill="x", pady=(8, 3))
         self.assets.label(
             self.sidebar,
             ASSET_GUARDIAN,
             ASSET_ATHENA,
-            size=(150, 180),
+            size=(132, 150),
             placeholder="🛡",
             style="Portrait.TLabel",
-        ).pack(anchor="center", pady=(18, 8))
-        ttk.Label(self.sidebar, text=f"“{QUOTE}”", style="Quote.TLabel", wraplength=180, justify="center").pack(
-            anchor="center", pady=(8, 10)
+        ).pack(anchor="center", pady=(10, 5))
+        ttk.Label(self.sidebar, text=f"“{QUOTE}”", style="Quote.TLabel", wraplength=235, justify="center").pack(
+            anchor="center", pady=(4, 6)
         )
         ttk.Label(self.sidebar, text="Statut : EN VEILLE", style="Status.TLabel").pack(anchor="center", pady=(0, 8))
         ttk.Label(
             self.sidebar,
             text="F11 Sanctuaire\nCtrl+L cible\nCtrl+Q quitter",
             style="Muted.TLabel",
-            wraplength=170,
+            wraplength=235,
             justify="center",
-        ).pack(anchor="center", side="bottom", pady=8)
+        ).pack(anchor="center", side="bottom", pady=4)
 
     def _bind_shortcuts(self) -> None:
         self.bind("<F11>", lambda _event: self.toggle_fullscreen())
@@ -1340,25 +1352,25 @@ class GraalAtackApp(tk.Tk):
         style.configure("Gold.TLabel", background=bg, foreground=gold_light, font=(body_family, 13, "bold"))
         style.configure("Section.TLabel", background=bg, foreground=gold_light, font=(title_family, 18, "bold"))
         style.configure("PageTitle.TLabel", background=bg, foreground=gold_light, font=(title_family, 26, "bold"))
-        style.configure("HeaderTitle.TLabel", background=THEME["bg_alt"], foreground=gold_light, font=(title_family, 34, "bold"))
-        style.configure("HeaderSubtitle.TLabel", background=THEME["bg_alt"], foreground=muted, font=(body_family, 17, "italic"))
-        style.configure("SidebarTitle.TLabel", background=panel, foreground=gold_light, font=(title_family, 22, "bold"))
+        style.configure("HeaderTitle.TLabel", background=THEME["bg_alt"], foreground=gold_light, font=(title_family, 30, "bold"))
+        style.configure("HeaderSubtitle.TLabel", background=THEME["bg_alt"], foreground=muted, font=(body_family, 14, "italic"))
+        style.configure("SidebarTitle.TLabel", background=panel, foreground=gold_light, font=(title_family, 19, "bold"))
         style.configure("SidebarSubtitle.TLabel", background=panel, foreground=muted, font=(body_family, 13, "italic"))
-        style.configure("LogoIcon.TLabel", background=panel, foreground=gold_light, font=(title_family, 58, "bold"))
-        style.configure("HeaderIcon.TLabel", background=THEME["bg_alt"], foreground=gold_light, font=(title_family, 56, "bold"))
-        style.configure("Portrait.TLabel", background=panel, foreground=THEME["violet_light"], font=(title_family, 48, "bold"))
-        style.configure("ImagePlaceholder.TLabel", background=panel_alt, foreground=THEME["violet_light"], font=(title_family, 34, "bold"))
+        style.configure("LogoIcon.TLabel", background=panel, foreground=gold_light, font=(title_family, 42, "bold"))
+        style.configure("HeaderIcon.TLabel", background=THEME["bg_alt"], foreground=gold_light, font=(title_family, 42, "bold"))
+        style.configure("Portrait.TLabel", background=panel, foreground=THEME["violet_light"], font=(title_family, 38, "bold"))
+        style.configure("ImagePlaceholder.TLabel", background=panel_alt, foreground=THEME["violet_light"], font=(title_family, 30, "bold"))
         style.configure("Quote.TLabel", background=panel, foreground=muted, font=(body_family, 12, "italic"))
         style.configure("Status.TLabel", background=panel, foreground=THEME["success"], font=(body_family, 13, "bold"))
         style.configure("Banner.TLabel", background=panel_alt, foreground=gold_light, font=(title_family, 15, "italic"))
         style.configure("CardTitle.TLabel", background=panel_alt, foreground=gold_light, font=(title_family, 16, "bold"))
-        style.configure("CardValue.TLabel", background=panel_alt, foreground=THEME["violet_light"], font=(title_family, 34, "bold"))
-        style.configure("CardIcon.TLabel", background=panel_alt, foreground=gold_light, font=(title_family, 34, "bold"))
-        style.configure("TButton", background=panel_alt, foreground=text, bordercolor=gold, lightcolor=gold, darkcolor=THEME["gold_dark"], focusthickness=1, focuscolor=violet, padding=(20, 14), font=(body_family, 14, "bold"))
+        style.configure("CardValue.TLabel", background=panel_alt, foreground=THEME["violet_light"], font=(title_family, 30, "bold"))
+        style.configure("CardIcon.TLabel", background=panel_alt, foreground=gold_light, font=(title_family, 30, "bold"))
+        style.configure("TButton", background=panel_alt, foreground=text, bordercolor=gold, lightcolor=gold, darkcolor=THEME["gold_dark"], focusthickness=1, focuscolor=violet, padding=(14, 9), font=(body_family, 13, "bold"))
         style.map("TButton", background=[("active", violet), ("pressed", THEME["gold_dark"])], foreground=[("active", "#ffffff")])
-        style.configure("Sidebar.TButton", background=panel_alt, foreground=gold_light, bordercolor=gold, lightcolor=gold_light, darkcolor=THEME["gold_dark"], focusthickness=2, focuscolor=THEME["violet_light"], padding=(18, 15), font=(body_family, 14, "bold"))
+        style.configure("Sidebar.TButton", background=panel_alt, foreground=gold_light, bordercolor=gold, lightcolor=gold_light, darkcolor=THEME["gold_dark"], focusthickness=2, focuscolor=THEME["violet_light"], padding=(12, 8), font=(body_family, 12, "bold"))
         style.map("Sidebar.TButton", background=[("active", THEME["violet"]), ("pressed", THEME["gold_dark"])], foreground=[("active", "#ffffff")])
-        style.configure("Danger.TButton", background="#231010", foreground=THEME["warning"], bordercolor=THEME["gold_dark"], padding=(18, 15), font=(body_family, 14, "bold"))
+        style.configure("Danger.TButton", background="#231010", foreground=THEME["warning"], bordercolor=THEME["gold_dark"], padding=(12, 8), font=(body_family, 12, "bold"))
         style.map("Danger.TButton", background=[("active", THEME["error"]), ("pressed", "#4a1515")], foreground=[("active", "#ffffff")])
         style.configure("TCheckbutton", background=bg, foreground=text, font=(body_family, 14))
         style.map("TCheckbutton", background=[("active", bg)], foreground=[("active", gold_light)])
