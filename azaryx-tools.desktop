@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Azaryx Offensive Tools
+Comment=Gestionnaire graphique de dépendances pour audits autorisés
+Exec=/opt/azaryx-tools/azaryx-tools
+Icon=applications-utilities
+Terminal=false
+Categories=Security;Utility;
+StartupNotify=true

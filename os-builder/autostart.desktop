@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Azaryx Offensive Tools
+Comment=Launch Azaryx Offensive Tools kiosk interface
+Exec=/usr/local/bin/azaryx-tools
+Icon=applications-utilities
+Terminal=false
+X-GNOME-Autostart-enabled=true
+StartupNotify=true

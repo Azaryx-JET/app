@@ -1,0 +1,5 @@
+Azaryx Offensive Tools OS
+Usage réservé aux audits autorisés, CTF, labs internes et machines personnelles.
+
+Sortie kiosk : F11 pour quitter le fullscreen, Ctrl+Q pour fermer l'application.
+Désactivation autostart : rm -f ~/.config/autostart/azaryx-tools.desktop ~/.config/openbox/autostart

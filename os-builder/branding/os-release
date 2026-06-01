@@ -1,0 +1,9 @@
+PRETTY_NAME="Azaryx Offensive Tools OS"
+NAME="Azaryx Offensive Tools OS"
+VERSION_ID="1.0"
+VERSION="1.0"
+ID=azaryx-tools-os
+ID_LIKE="debian kali ubuntu"
+HOME_URL="https://example.invalid/azaryx-tools"
+SUPPORT_URL="https://example.invalid/azaryx-tools/support"
+BUG_REPORT_URL="https://example.invalid/azaryx-tools/issues"
