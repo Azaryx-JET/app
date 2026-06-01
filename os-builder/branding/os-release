@@ -1,0 +1,9 @@
+PRETTY_NAME="GRAAL-ATACK OS"
+NAME="GRAAL-ATACK OS"
+VERSION_ID="1.0"
+VERSION="1.0"
+ID=graal-atack-os
+ID_LIKE="debian kali ubuntu"
+HOME_URL="https://example.invalid/graal-atack"
+SUPPORT_URL="https://example.invalid/graal-atack/support"
+BUG_REPORT_URL="https://example.invalid/graal-atack/issues"
