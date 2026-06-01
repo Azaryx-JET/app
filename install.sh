@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/opt/graal-atack"
+APP_DIR="/opt/graal-attack"
 LEGACY_APP_DIR="/opt/azaryx-tools"
-BIN_LINK="/usr/local/bin/graal-atack"
+BIN_LINK="/usr/local/bin/graal-attack"
 LEGACY_BIN_LINK="/usr/local/bin/azaryx-tools"
-DESKTOP_FILE="/usr/share/applications/graal-atack.desktop"
+DESKTOP_FILE="/usr/share/applications/graal-attack.desktop"
 LEGACY_DESKTOP_FILE="/usr/share/applications/azaryx-tools.desktop"
 SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -22,20 +22,20 @@ fi
 
 mkdir -p "${APP_DIR}"
 
-if [[ -x "${SOURCE_DIR}/dist/graal-atack" ]]; then
-  install -m 0755 "${SOURCE_DIR}/dist/graal-atack" "${APP_DIR}/graal-atack"
+if [[ -x "${SOURCE_DIR}/dist/graal-attack" ]]; then
+  install -m 0755 "${SOURCE_DIR}/dist/graal-attack" "${APP_DIR}/graal-attack"
 else
   install -m 0644 "${SOURCE_DIR}/main.py" "${APP_DIR}/main.py"
   mkdir -p "${APP_DIR}/modules"
   install -m 0644 "${SOURCE_DIR}/modules/__init__.py" "${APP_DIR}/modules/__init__.py"
   install -m 0644 "${SOURCE_DIR}/modules/dependency_manager.py" "${APP_DIR}/modules/dependency_manager.py"
   install -m 0644 "${SOURCE_DIR}/modules/tool_runner.py" "${APP_DIR}/modules/tool_runner.py"
-  cat > "${APP_DIR}/graal-atack" <<'EOF'
+  cat > "${APP_DIR}/graal-attack" <<'EOF'
 #!/usr/bin/env bash
-cd /opt/graal-atack
+cd /opt/graal-attack
 exec python3 main.py "$@"
 EOF
-  chmod 0755 "${APP_DIR}/graal-atack"
+  chmod 0755 "${APP_DIR}/graal-attack"
 fi
 
 if [[ -f "${SOURCE_DIR}/assets/icon.png" ]]; then
@@ -45,16 +45,16 @@ if [[ -f "${SOURCE_DIR}/assets/icon.png" ]]; then
 else
   ICON_ENTRY="Icon=applications-utilities"
 fi
-ln -sf "${APP_DIR}/graal-atack" "${BIN_LINK}"
-ln -sf "${APP_DIR}/graal-atack" "${LEGACY_BIN_LINK}"
+ln -sf "${APP_DIR}/graal-attack" "${BIN_LINK}"
+ln -sf "${APP_DIR}/graal-attack" "${LEGACY_BIN_LINK}"
 ln -sfn "${APP_DIR}" "${LEGACY_APP_DIR}"
 
 cat > "${DESKTOP_FILE}" <<EOF
 [Desktop Entry]
 Type=Application
-Name=GRAAL-ATACK
+Name=GRAAL-ATTACK
 Comment=Sanctuaire dark fantasy pour audits autorisés
-Exec=${APP_DIR}/graal-atack
+Exec=${APP_DIR}/graal-attack
 ${ICON_ENTRY}
 Terminal=false
 Categories=Security;Utility;
@@ -67,4 +67,4 @@ if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database /usr/share/applications || true
 fi
 
-echo "GRAAL-ATACK installé dans ${APP_DIR}. Lancez: graal-atack (compatibilité: azaryx-tools)"
+echo "GRAAL-ATTACK installé dans ${APP_DIR}. Lancez: graal-attack (compatibilité: azaryx-tools)"

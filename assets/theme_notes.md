@@ -1,4 +1,4 @@
-# GRAAL-ATACK Theme Notes
+# GRAAL-ATTACK Theme Notes
 
 ## Palette
 
@@ -36,7 +36,7 @@
 
 L'application ne dépend d'aucune image binaire. Si besoin, ces fichiers peuvent être ajoutés sans rendre l'interface obligatoire :
 
-- `assets/logo.png` : logo GRAAL-ATACK pour la barre latérale.
+- `assets/logo.png` : logo GRAAL-ATTACK pour la barre latérale.
 - `assets/graal.png` : symbole du Graal pour le header ou le dashboard.
 - `assets/icon.png` : icône de fenêtre/desktop.
 - `assets/wallpaper.png` : fond d'écran optionnel pour le mode OS/kiosk.

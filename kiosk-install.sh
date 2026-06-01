@@ -47,6 +47,6 @@ Moyens de sortie conservés dans l'application:
 Retour au mode normal:
 1. Désactivez "Démarrer en mode sanctuaire plein écran" dans l’Autel.
 2. Supprimez l'autostart utilisateur:
-   rm -f ~/.config/autostart/graal-atack.desktop
+   rm -f ~/.config/autostart/graal-attack.desktop
 3. Optionnel: réactivez la veille écran dans les paramètres de votre bureau.
 EOF

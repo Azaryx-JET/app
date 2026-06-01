@@ -28,16 +28,16 @@ from modules.tool_runner import (
     validate_timeout,
 )
 
-APP_NAME = "GRAAL-ATACK"
+APP_NAME = "GRAAL-ATTACK"
 BRAND_TITLE = "GRAAL-ATTACK"
 APP_VERSION = "v0.1"
 LEGACY_CONFIG_DIR = Path.home() / ".config" / "azaryx-tools"
-CONFIG_DIR = Path.home() / ".config" / "graal-atack"
+CONFIG_DIR = Path.home() / ".config" / "graal-attack"
 CONFIG_FILE = CONFIG_DIR / "settings.ini"
 LEGACY_CONFIG_FILE = LEGACY_CONFIG_DIR / "settings.ini"
 DEFAULT_REPORTS_DIR = Path.cwd() / "reports"
 LEGAL_WARNING = (
-    "GRAAL-ATACK rassemble des reliques d'audit destinées uniquement aux quêtes "
+    "GRAAL-ATTACK rassemble des reliques d'audit destinées uniquement aux quêtes "
     "autorisées : CTF, laboratoires internes, audits validés et machines "
     "personnelles. Toute incantation non autorisée est interdite."
 )
@@ -294,7 +294,7 @@ class DependencyPage(ttk.Frame):
 
 
 class DashboardPage(ttk.Frame):
-    def __init__(self, parent: tk.Misc, app: GraalAtackAppProtocol) -> None:
+    def __init__(self, parent: tk.Misc, app: GraalAttackAppProtocol) -> None:
         super().__init__(parent, padding=18, style="Page.TFrame")
         self.app = app
         self.card_labels: dict[str, ttk.Label] = {}
@@ -366,7 +366,7 @@ class DashboardPage(ttk.Frame):
 
 
 class ToolsPage(ttk.Frame):
-    def __init__(self, parent: tk.Misc, app: GraalAtackAppProtocol) -> None:
+    def __init__(self, parent: tk.Misc, app: GraalAttackAppProtocol) -> None:
         super().__init__(parent, padding=12, style="Page.TFrame")
         self.app = app
         self.output_queue: queue.Queue[tuple[str, str | None]] = queue.Queue()
@@ -580,7 +580,7 @@ class ToolsPage(ttk.Frame):
 
 
 class ReportsPage(ttk.Frame):
-    def __init__(self, parent: tk.Misc, app: GraalAtackAppProtocol) -> None:
+    def __init__(self, parent: tk.Misc, app: GraalAttackAppProtocol) -> None:
         super().__init__(parent, padding=12, style="Page.TFrame")
         self.app = app
         self._build_widgets()
@@ -687,7 +687,7 @@ class ReportsPage(ttk.Frame):
 
 
 class SettingsPage(ttk.Frame):
-    def __init__(self, parent: tk.Misc, app: GraalAtackAppProtocol) -> None:
+    def __init__(self, parent: tk.Misc, app: GraalAttackAppProtocol) -> None:
         super().__init__(parent, padding=12, style="Page.TFrame")
         self.app = app
         self._build_widgets()
@@ -730,7 +730,7 @@ class SettingsPage(ttk.Frame):
         ).pack(anchor="w", pady=4)
 
         ttk.Button(self, text="Sceller les paramètres", command=self.save).pack(anchor="w", pady=12)
-        self.status_label = ttk.Label(self, text="Les sceaux sont sauvegardés dans ~/.config/graal-atack/settings.ini", style="Muted.TLabel")
+        self.status_label = ttk.Label(self, text="Les sceaux sont sauvegardés dans ~/.config/graal-attack/settings.ini", style="Muted.TLabel")
         self.status_label.pack(anchor="w")
 
     def choose_reports_dir(self) -> None:
@@ -761,7 +761,7 @@ class SettingsPage(ttk.Frame):
         self.status_label.configure(text="Paramètres scellés sur l’Autel.")
 
 
-class GraalAtackAppProtocol(Protocol):
+class GraalAttackAppProtocol(Protocol):
     def get_timeout(self) -> int: ...
     def set_timeout(self, timeout: int) -> None: ...
     def get_reports_dir(self) -> str: ...
@@ -778,7 +778,7 @@ class GraalAtackAppProtocol(Protocol):
     def update_settings(self, **kwargs: object) -> None: ...
 
 
-class GraalAtackApp(tk.Tk):
+class GraalAttackApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.settings = load_settings()
@@ -1019,7 +1019,7 @@ class GraalAtackApp(tk.Tk):
 
 
 def main() -> None:
-    app = GraalAtackApp()
+    app = GraalAttackApp()
     app.mainloop()
 
 

@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-APP_DIR="/opt/graal-atack"
+APP_DIR="/opt/graal-attack"
 LEGACY_APP_DIR="/opt/azaryx-tools"
-APP_BIN="/usr/local/bin/graal-atack"
+APP_BIN="/usr/local/bin/graal-attack"
 LEGACY_APP_BIN="/usr/local/bin/azaryx-tools"
 KIOSK_USER="${GRAAL_KIOSK_USER:-${AZARYX_KIOSK_USER:-graal}}"
 PACKAGES_FILE="${SCRIPT_DIR}/packages.txt"
@@ -14,7 +14,7 @@ WALLPAPER_SOURCE="${SCRIPT_DIR}/branding/wallpaper.png"
 OS_RELEASE_SOURCE="${SCRIPT_DIR}/branding/os-release"
 MOTD_SOURCE="${SCRIPT_DIR}/motd"
 
-echo "== GRAAL-ATACK OS postinstall =="
+echo "== GRAAL-ATTACK OS postinstall =="
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Erreur: lancez ce script en root (sudo ./os-builder/postinstall.sh)." >&2
@@ -53,14 +53,14 @@ else
   echo "Wallpaper optionnel absent: aucun fond d'écran ne sera installé."
 fi
 
-cat > "${APP_DIR}/graal-atack" <<'EOF'
+cat > "${APP_DIR}/graal-attack" <<'EOF'
 #!/usr/bin/env bash
-cd /opt/graal-atack
+cd /opt/graal-attack
 exec python3 main.py "$@"
 EOF
-chmod 0755 "${APP_DIR}/graal-atack"
-ln -sf "${APP_DIR}/graal-atack" "${APP_BIN}"
-ln -sf "${APP_DIR}/graal-atack" "${LEGACY_APP_BIN}"
+chmod 0755 "${APP_DIR}/graal-attack"
+ln -sf "${APP_DIR}/graal-attack" "${APP_BIN}"
+ln -sf "${APP_DIR}/graal-attack" "${LEGACY_APP_BIN}"
 ln -sfn "${APP_DIR}" "${LEGACY_APP_DIR}"
 
 if ! id "${KIOSK_USER}" >/dev/null 2>&1; then
@@ -80,22 +80,22 @@ if ! id "${KIOSK_USER}" >/dev/null 2>&1; then
 fi
 KIOSK_HOME="$(getent passwd "${KIOSK_USER}" | cut -d: -f6)"
 
-mkdir -p "${KIOSK_HOME}/.config/autostart" "${KIOSK_HOME}/.config/openbox" "${KIOSK_HOME}/.config/graal-atack"
-install -m 0644 "${AUTOSTART_SOURCE}" "${KIOSK_HOME}/.config/autostart/graal-atack.desktop"
+mkdir -p "${KIOSK_HOME}/.config/autostart" "${KIOSK_HOME}/.config/openbox" "${KIOSK_HOME}/.config/graal-attack"
+install -m 0644 "${AUTOSTART_SOURCE}" "${KIOSK_HOME}/.config/autostart/graal-attack.desktop"
 cat > "${KIOSK_HOME}/.config/openbox/autostart" <<'EOF'
-# GRAAL-ATACK OS autostart. Remove this file to disable kiosk autostart.
+# GRAAL-ATTACK OS autostart. Remove this file to disable kiosk autostart.
 xset s off 2>/dev/null || true
 xset -dpms 2>/dev/null || true
 xset s noblank 2>/dev/null || true
-if command -v feh >/dev/null 2>&1 && [[ -f /opt/graal-atack/assets/wallpaper.png ]]; then
-  feh --bg-scale /opt/graal-atack/assets/wallpaper.png || true
+if command -v feh >/dev/null 2>&1 && [[ -f /opt/graal-attack/assets/wallpaper.png ]]; then
+  feh --bg-scale /opt/graal-attack/assets/wallpaper.png || true
 elif command -v xsetroot >/dev/null 2>&1; then
   xsetroot -solid '#101827' || true
 fi
-/usr/local/bin/graal-atack &
+/usr/local/bin/graal-attack &
 EOF
 chmod 0755 "${KIOSK_HOME}/.config/openbox/autostart"
-cat > "${KIOSK_HOME}/.config/graal-atack/settings.ini" <<EOF
+cat > "${KIOSK_HOME}/.config/graal-attack/settings.ini" <<EOF
 [legal]
 notice_seen = false
 
@@ -136,20 +136,20 @@ fi
 
 cat <<EOF
 
-GRAAL-ATACK OS est installé.
+GRAAL-ATTACK OS est installé.
 L'utilisateur kiosk est: ${KIOSK_USER}
 L'application démarre via Openbox/autostart et peut démarrer en fullscreen.
 
 Le kiosk reste réversible et ne bloque pas l'utilisateur:
 - F11 : entrer/quitter le Sanctuaire
-- Ctrl+Q : quitter GRAAL-ATACK
+- Ctrl+Q : quitter GRAAL-ATTACK
 - Bouton "Quitter le Sanctuaire" dans le menu latéral
 
 Pour désactiver le kiosk/autostart:
-  sudo rm -f ${KIOSK_HOME}/.config/autostart/graal-atack.desktop
+  sudo rm -f ${KIOSK_HOME}/.config/autostart/graal-attack.desktop
   sudo rm -f ${KIOSK_HOME}/.config/openbox/autostart
   sudo rm -f /etc/lightdm/lightdm.conf.d/50-graal-kiosk.conf
-  sudo sed -i 's/start_fullscreen = true/start_fullscreen = false/' ${KIOSK_HOME}/.config/graal-atack/settings.ini
+  sudo sed -i 's/start_fullscreen = true/start_fullscreen = false/' ${KIOSK_HOME}/.config/graal-attack/settings.ini
 
 Pour restaurer /etc/os-release si besoin:
   sudo cp /etc/os-release.graal-backup /etc/os-release

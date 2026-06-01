@@ -1,4 +1,4 @@
-"""Dependency discovery and installation helpers for GRAAL-ATACK.
+"""Dependency discovery and installation helpers for GRAAL-ATTACK.
 
 The functions in this module deliberately avoid ``shell=True`` and execute only
 allow-listed package-manager commands built as subprocess argument lists.
@@ -74,28 +74,9 @@ def _log(logger: LogCallback | None, message: str) -> None:
 
 def check_command_exists(command: str) -> str | None:
     """Return the binary path for *command* if it exists in PATH, else None."""
-
     if not command or any(separator in command for separator in ("/", "\\", "\x00")):
         return None
-    path = shutil.which(command)
-    if not path:
-        return None
-
-    try:
-        # A tiny non-destructive command confirms that the binary can at least be
-        # executed. Some tools return non-zero for --version, so timeout and OS
-        # errors are the only hard failures here.
-        subprocess.run(
-            [path, "--version"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=CHECK_TIMEOUT_SECONDS,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return path
-    return path
-
+    return shutil.which(command)
 
 def detect_package_manager() -> str | None:
     """Detect the supported package manager, currently apt/apt-get only."""

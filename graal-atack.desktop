@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=GRAAL-ATACK
+Name=GRAAL-ATTACK
 Comment=Sanctuaire dark fantasy pour audits autorisés
-Exec=/opt/graal-atack/graal-atack
+Exec=/opt/graal-attack/graal-attack
 Icon=applications-utilities
 Terminal=false
 Categories=Security;Utility;

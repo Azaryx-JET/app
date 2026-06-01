@@ -2,4 +2,4 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-pyinstaller --onefile --windowed --name graal-atack main.py
+pyinstaller --onefile --windowed --name graal-attack main.py

@@ -1,6 +1,6 @@
-# GRAAL-ATACK
+# GRAAL-ATTACK
 
-**GRAAL-ATACK** est un sanctuaire graphique Linux pour préparer et conduire des quêtes d'audit autorisées. L'interface mêle mythologie du Graal, dark fantasy et supervision cyber : reliques, missions, archives et autel de configuration.
+**GRAAL-ATTACK** est un sanctuaire graphique Linux pour préparer et conduire des quêtes d'audit autorisées. L'interface mêle mythologie du Graal, dark fantasy et supervision cyber : reliques, missions, archives et autel de configuration.
 
 > **Serment légal**
 > Ces outils sont destinés uniquement aux audits autorisés, aux CTF, aux labs internes et aux machines personnelles ou explicitement autorisées. Toute utilisation non autorisée est interdite.
@@ -28,7 +28,7 @@
 python3 main.py
 ```
 
-La configuration est sauvegardée dans `~/.config/graal-atack/settings.ini`. L'ancien chemin `~/.config/azaryx-tools/settings.ini` reste lu en compatibilité si le nouveau fichier n'existe pas.
+La configuration est sauvegardée dans `~/.config/graal-attack/settings.ini`. L'ancien chemin `~/.config/azaryx-tools/settings.ini` reste lu en compatibilité si le nouveau fichier n'existe pas.
 
 ## Build PyInstaller
 
@@ -39,10 +39,10 @@ La configuration est sauvegardée dans `~/.config/graal-atack/settings.ini`. L'a
 Le script exécute :
 
 ```bash
-pyinstaller --onefile --windowed --name graal-atack main.py
+pyinstaller --onefile --windowed --name graal-attack main.py
 ```
 
-L'exécutable est généré dans `dist/graal-atack`.
+L'exécutable est généré dans `dist/graal-attack`.
 
 ## Installation système
 
@@ -52,11 +52,11 @@ sudo ./install.sh
 
 Le script :
 
-- copie l'application dans `/opt/graal-atack` ;
-- installe l'icône optionnelle dans `/opt/graal-atack/assets/icon.png` si le fichier existe ;
-- crée `/usr/local/bin/graal-atack` ;
+- copie l'application dans `/opt/graal-attack` ;
+- installe l'icône optionnelle dans `/opt/graal-attack/assets/icon.png` si le fichier existe ;
+- crée `/usr/local/bin/graal-attack` ;
 - conserve la compatibilité `/usr/local/bin/azaryx-tools` ;
-- crée le raccourci `/usr/share/applications/graal-atack.desktop` et une copie compatible `azaryx-tools.desktop`.
+- crée le raccourci `/usr/share/applications/graal-attack.desktop` et une copie compatible `azaryx-tools.desktop`.
 
 ## Branding optionnel
 
@@ -84,7 +84,7 @@ Les sorties de mission sont sauvegardées dans le dossier d'archives configuré.
 
 ## Mode OS/Kiosk
 
-GRAAL-ATACK peut fonctionner comme interface principale d'un poste Linux d'audit sans bloquer l'utilisateur.
+GRAAL-ATTACK peut fonctionner comme interface principale d'un poste Linux d'audit sans bloquer l'utilisateur.
 
 - Menu latéral fixe avec navigation : 🛡 Sanctuaire, ⚜ Reliques, ⚔ Missions, 📜 Archives, ⚙ Autel.
 - **Entrer dans le Sanctuaire** active le fullscreen.
@@ -100,7 +100,7 @@ GRAAL-ATACK peut fonctionner comme interface principale d'un poste Linux d'audit
 Pour revenir au mode normal :
 
 ```bash
-rm -f ~/.config/autostart/graal-atack.desktop
+rm -f ~/.config/autostart/graal-attack.desktop
 ```
 
 ### Installation kiosk

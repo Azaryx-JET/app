@@ -1,4 +1,4 @@
-"""Safe tool launch definitions for GRAAL-ATACK.
+"""Safe tool launch definitions for GRAAL-ATTACK.
 
 Only allow-listed, non-destructive reconnaissance commands are exposed here. All
 commands are returned as argument lists for ``subprocess``; this module never
